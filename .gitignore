@@ -1,0 +1,14 @@
+*~
+,*
++*
+*.aux
+*.log
+*.fdb_latexmk
+*.fls
+*.nav
+*.vrb
+*.out
+*.snm
+*.synctex.gz
+*.toc
+__pycache__
