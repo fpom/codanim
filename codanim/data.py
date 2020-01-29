@@ -91,8 +91,7 @@ class CAniTikZ (CAni) :
         return cleandoc(r"""\begin{{tikzpicture}}[{opt.tikzpicture}]
           {code}
         \end{{tikzpicture}}
-        """).format(opt=opt,
-                    code="\n  ".join(self.tikz(**tikz).splitlines()))
+        """).format(opt=opt, code="\n  ".join(self.tikz(**tikz).splitlines()))
 
 class Pointer (CAniTikZ) :
     def __init__ (self, data) :
@@ -250,24 +249,17 @@ class Aggregate (CAniTikZ) :
             else :
                 yield val._node(opt)
             prev = val
-        yield (r"\node[{opt.group},fit=({first}) ({last})] ({nodeid}) {{}};"
-               r"").format(opt=opt,
-                           nodeid=self.nodeid,
-                           first=(self@0).nodeid,
-                           last=(self@-1).nodeid)
+        first, last = (self@0).nodeid, (self@-1).nodeid
+        yield fr"\node[{opt.group},fit=({first}) ({last})] ({self.nodeid}) {{}};"
     def _ticks (self, opt) :
-        ticks_side = opt.aggregate.get("ticks", None)
-        if not ticks_side :
+        side = opt.aggregate.get("ticks", None)
+        if not side :
             return
-        ticks_anchor = opp(ticks_side)
+        anchor = opp(side)
         for key, val in self._d.items() :
-            yield (r"\node[{opt.ticks},anchor={anchor}] at ({nodeid}.{side})"
-                   r" {{{tick}}};"
-                   r"").format(opt=opt,
-                               anchor=ticks_anchor,
-                               nodeid=val.nodeid,
-                               side=ticks_side,
-                               tick=self._tick(key, opt))
+            tick = self._tick(key, opt)
+            nodeid = val.nodeid
+            yield fr"\node[{opt.ticks},anchor={anchor}] at ({nodeid}.{side}) {{{tick}}};"
     def _tick (self, key, opt) :
         return fr"{key}\strut"
     def _highlight (self, opt) :
@@ -285,8 +277,8 @@ class Aggregate (CAniTikZ) :
             def minstep (item) :
                 return tuple(sorted(item[1]))
             for info, steps in sorted(mina.items(), key=minstep) :
-                yield (r"\only<{steps}>{{"
-                       r"").format(steps=",".join(str(s) for s in steps))
+                when = ",".join(str(s) for s in sorted(steps))
+                yield fr"\only<{when}>{{"
                 for key in info :
                     nodeid = (self@key).nodeid
                     yield (fr"\draw[{access}] ({nodeid}.south west) rectangle"
@@ -302,8 +294,7 @@ class Aggregate (CAniTikZ) :
         for (start, stop), info in sorted(anim.items(), key=firstlargest) :
             if all(v is None for _, v in info) :
                 continue
-            yield (r"\only<{start}-{stop}>{{"
-                   r"").format(start=start, stop=stop)
+            yield fr"\only<{start}-{stop}>{{"
             for key, val in info :
                 if val is not None :
                     nodeid = (self@key).nodeid

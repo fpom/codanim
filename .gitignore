@@ -11,4 +11,7 @@
 *.snm
 *.synctex.gz
 *.toc
+*.tikz
 __pycache__
+examples/codanim
+examples/out.tikz

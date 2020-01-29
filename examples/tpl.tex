@@ -1,0 +1,32 @@
+\documentclass{beamer}
+
+\setbeamertemplate{navigation symbols}{}
+
+\usepackage{fancyvrb}
+\usepackage{adjustbox}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{fit}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning}
+
+\def\hl #1{{\setbox0=\hbox{#1}%
+    \adjustbox{set vsize={\ht0}{\dp0}}{\hbox to \wd0{\hss\colorbox{yellow}{#1}\hss}}}}
+
+\def\hl #1{%
+  \tikz[overlay,baseline,inner sep=1pt]
+    \node[fill=yellow,anchor=text] {\color{yellow}#1};%
+  #1%
+}
+
+\def\onlyhl #1{\only<#1>\hl}
+\def\onlyshow #1{\only<#1>}
+
+\begin{document}
+
+\begin{frame}
+  \input{out.tikz}
+\end{frame}
+
+\end{document}
