@@ -1,7 +1,7 @@
 from itertools import chain
 from inspect import cleandoc
 from collections import defaultdict
-from . import CAni
+from . import CAni, ExecEnv
 
 class dopt (dict) :
     def __str__ (self) :
@@ -48,6 +48,7 @@ class TikZ (object) :
                            "inner sep": "0pt",
                            "outer sep": "0pt"},
                  "alloc": {},
+                 "index": {"scale": ".9"},
                  "ticks": {"gray": None,
                            "scale": ".7"}}
     def __init__ (self, options, **default) :
@@ -79,13 +80,13 @@ class CAniTikZ (CAni) :
             self._nodeid[char] = num + 1
         self._o = TikZ(tikz, **self._defaults)
     def __matmul__ (self, key) :
-        if key == 0 :
+        if key == None :
             return self
         else :
             raise ValueError("invalid index %r for %s object"
                              % (key, self.__class__.__name__))
     def ptr (self) :
-        return Pointer(self@0)
+        return Pointer(self)
     def tex (self, **tikz) :
         opt = TikZ(tikz)
         return cleandoc(r"""\begin{{tikzpicture}}[{opt.tikzpicture}]
@@ -102,8 +103,12 @@ class Pointer (CAniTikZ) :
         if self._d is None :
             return ""
         else :
-            tgt = (self._d@0).nodeid
+            tgt = (self._d@None).nodeid
             return fr"\draw[{opt.pointer}] ({src}) -- ({tgt});"
+    def __getitem__ (self, key) :
+        return self._d[key]
+    def __setitem__ (self, key, val) :
+        self._d[key] = val
 
 class Value (CAniTikZ) :
     def __init__ (self, init=None, **tikz) :
@@ -173,6 +178,8 @@ class Value (CAniTikZ) :
         except :
             return f"\node at ({self.nodeid}) {{{value}\strut}};"
 
+ExecEnv._ValueClass = Value
+
 class Aggregate (CAniTikZ) :
     def __init__ (self, init, **tikz) :
         super().__init__(tikz)
@@ -199,10 +206,8 @@ class Aggregate (CAniTikZ) :
     def __matmul__ (self, key) :
         if key in self._d :
             return self._d[key]
-        elif key == 0 :
+        elif key == None :
             return self._first
-        elif key == -1 :
-            return self._last
         else :
             raise ValueError("invalid index %r for %s object"
                              % (key, self.__class__.__name__))
@@ -240,16 +245,11 @@ class Aggregate (CAniTikZ) :
     def _nodes (self, opt) :
         grow = opt.aggregate["grow"]
         anchor = opp(grow)
-        prev = None
         for key, val in self._d.items() :
-            if prev is None :
-                yield val._node(opt)
-                opt = (opt / "pos") + {"value": {"anchor": anchor},
-                                       "pos": {"at": f"({val.nodeid}.{grow})"}}
-            else :
-                yield val._node(opt)
-            prev = val
-        first, last = (self@0).nodeid, (self@-1).nodeid
+            yield val._node(opt)
+            opt = (opt / "pos") + {"value": {"anchor": anchor},
+                                   "pos": {"at": f"({val.nodeid}.{grow})"}}
+        first, last = self._first.nodeid, self._last.nodeid
         yield fr"\node[{opt.group},fit=({first}) ({last})] ({self.nodeid}) {{}};"
     def _ticks (self, opt) :
         side = opt.aggregate.get("ticks", None)
@@ -305,24 +305,71 @@ class Aggregate (CAniTikZ) :
             yield "}"
 
 class Array (Aggregate) :
-    _defaults = {"aggregate": {"index": "west"}}
+    _defaults = {"aggregate": {"index": "north"}}
     def __init__ (self, init, index=[], **tikz) :
         super().__init__(init, **tikz)
         self._o.aggregatescope = self._o.arrayscope
-        # register index
+        self._i = {}
+        for i in index :
+            self.index(i)
+    def index (self, name, init=None) :
+        self._i[name] = self._env[name] = Value(init)
     def _ticks (self, opt) :
         for t in super()._ticks(opt) :
             yield t
-        # yield index
+        side = opt.aggregate.get("index", None)
+        if not side :
+            return
+        anchor = opp(side)
+        anim = defaultdict(list)
+        for name, value in self._i.items() :
+            value.stop()
+            for val, start, stop in value._h :
+                for step in range(start, stop+1) :
+                    anim[step].append((name, val))
+        mina = defaultdict(set)
+        for step, keys in anim.items() :
+            mina[tuple(sorted(keys))].add(step)
+        def minstep (item) :
+            return tuple(sorted(item[1]))
+        for info, steps in sorted(mina.items(), key=minstep) :
+            xpos = defaultdict(list)
+            for name, value in info :
+                if value is not None :
+                    xpos[value].append(name)
+            if not xpos :
+                continue
+            when = ",".join(str(s) for s in sorted(steps))
+            yield fr"\uncover<{when}>{{"
+            for value, names in xpos.items() :
+                label = self._index(names, opt)
+                try :
+                    cell = (self@value).nodeid
+                except ValueError :
+                    continue
+                yield (fr"  \node[{opt.index},anchor={anchor},at=({cell}.{side})]"
+                       fr" {{{label}}};")
+            yield "}"
+    def _index (self, names, opt) :
+        label = ",".join(sorted(names))
+        return fr"{label}\strut"
 
 class Struct (Aggregate) :
     _defaults = {"aggregate": {"grow": "south",
                                "ticks": "west"}}
     def __init__ (self, init, **tikz) :
+        self.__dict__.update(_d={}, _o=None, _first=None, _last=None, nodeid=None)
         super().__init__(init, **tikz)
         self._o.aggregatescope = self._o.structscope
     def _tick (self, key, opt) :
         return fr".{key}\strut"
+    def __getattr__ (self, name) :
+        return self[name]
+    def __setattr__ (self, name, value) :
+        if name in self._d :
+            self[name] = value
+        else :
+            self.__dict__[name] = value
 
 class Heap (CAniTikZ) :
     _defaults = {"group": {"opacity": 0,
@@ -360,7 +407,7 @@ class Heap (CAniTikZ) :
             yield r"  }"
             opt = opt + {"pos": {opt.heap["grow"]:
                                  "{dist} of {prev}".format(dist=opt.heap["distance"],
-                                                           prev=(data@0).nodeid)}}
+                                                           prev=(data@None).nodeid)}}
         children = " ".join(f"({nid})" for nid in fit)
         yield fr"  \node[{opt.group},fit={children}] ({self.nodeid}) {{}};"
         yield r"\end{scope}"

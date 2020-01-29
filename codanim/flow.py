@@ -130,7 +130,7 @@ class XDECL (_CODE) :
 
 class DECL (_CODE) :
     _fields = ["name"]
-    _options = ["init"]
+    _options = ["init", "animate"]
     def __call__ (self) :
         if self.init is not None :
             self.init()
@@ -147,7 +147,7 @@ class DECL (_CODE) :
             return src + "  " + "".join(self._tex())
     def _tex (self) :
         tail = r"\PY{{c+c1}}{{/* {value} */}}"
-        for value, start, stop in self._cell.hist :
+        for value, start, stop in self._env.get(self.name)._h :
             if value is not None :
                 yield (r"\onlyshow{{{start}-{stop}}}{{{value}}}"
                        r"").format(start=start or 1,

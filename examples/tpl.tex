@@ -4,6 +4,7 @@
 
 \usepackage{fancyvrb}
 \usepackage{adjustbox}
+\usepackage{pygments}
 
 \usepackage{tikz}
 \usetikzlibrary{arrows}
@@ -25,8 +26,9 @@
 
 \begin{document}
 
-\begin{frame}
-  \input{out.tikz}
+\begin{frame}[fragile]
+  \IfFileExists{out.code}{\VerbatimInput[commandchars=\\\{\}]{out.code}}{}
+  \IfFileExists{out.tikz}{\input{out.tikz}}{}
 \end{frame}
 
 \end{document}

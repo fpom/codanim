@@ -6,4 +6,5 @@ p = h.new(Struct({"data": 2, "next": p}))
 p = h.new(Struct({"data": 3, "next": p}))
 h.new(Value(p, value={"yshift": "-1cm"}))
 
-print(h.tex(tikzpicture={"scale": .7}))
+with open("out.tikz", "w") as out :
+    out.write(h.tex(tikzpicture={"scale": .7}))

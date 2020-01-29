@@ -14,4 +14,4 @@
 *.tikz
 __pycache__
 examples/codanim
-examples/out.tikz
+examples/out.*

@@ -1,8 +1,9 @@
-all: heap.pdf
+all: heap.pdf qs-partition.pdf
 
 %.pdf: %.py tpl.tex
 	ln -sf ../codanim .
-	python $< > out.tikz
+	rm -f out.*
+	python $<
 	latexmk -pdf tpl
 	cp tpl.pdf $@
 	latexmk -C tpl
