@@ -5,7 +5,7 @@ mp4: qs-partition.mp4 qs-main.mp4 stack-push.mp4
 %.pdf: %.py tpl.tex
 	ln -sf ../codanim .
 	rm -f out.*
-	python $<
+	python3 $<
 	pdflatex tpl
 	pdflatex tpl
 	cp tpl.pdf $@
