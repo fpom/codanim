@@ -6,11 +6,10 @@ mp4: qs-partition.mp4 qs-main.mp4 stack-push.mp4
 	rm -f out.*
 	PYTHONPATH=..:$$PYTHONPATH python3 $<
 	pdflatex tpl
-	pdflatex tpl
 	mv -f tpl.pdf $@
 
 %.gif: %.pdf
-	rm -rf _gif
+	rm -rf _gif $@
 	mkdir _gif
 	gs -dSAFER -DBATCH -dNOPAUSE -sDEVICE=png16m -r400 -sOutputFile=_gif/%03d.png $<
 	mogrify -resize 800x600 -format gif _gif/*.png
@@ -18,7 +17,7 @@ mp4: qs-partition.mp4 qs-main.mp4 stack-push.mp4
 	rm -rf _gif
 
 %.mp4: %.pdf
-	rm -rf _mp4
+	rm -rf _mp4 $@
 	mkdir _mp4
 	gs -dSAFER -DBATCH -dNOPAUSE -sDEVICE=png16m -r400 -sOutputFile=_mp4/%03d.png $<
 	ffmpeg -r 1 -s 1024x768 -i _mp4/%03d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p $@

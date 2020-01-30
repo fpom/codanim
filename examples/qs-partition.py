@@ -1,13 +1,9 @@
-from codanim.data import Array, Struct, Value, Heap
+from codanim.data import Array, Struct, Value, Box
 from codanim.flow import FUNC, BLOCK, ENV, WS, DECL, WHILE, EXPR, DO, STMT, RETURN, IF
 
 a = Array([3, 13, 5, 0, 7, 11, 4, 9, 14, 2, 10, 1, 12, 8, 6],
           index=["a", "b"])
 t = Struct({"len": Value(15), "val": a.ptr()})
-
-h = Heap()
-h.new(a)
-h.new(t)
 
 partition = FUNC(BLOCK(ENV("t", t),
                        WS("  "),
@@ -55,5 +51,7 @@ with open("out.code", "w") as out :
     out.write(partition.tex())
 
 # save data animation
+b = Box(a, t, grow="left")
 with open("out.tikz", "w") as out :
-    out.write(h.tex(tikzpicture={"scale": .6}))
+    out.write(b.tex(tikzpicture={"scale": .6},
+                    tail=r"\node at (0,-2) {};"))

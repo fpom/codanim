@@ -1,4 +1,4 @@
-from codanim.data import Array, Heap
+from codanim.data import Array, Box
 from codanim.flow import FUNC, BLOCK, ENV, WS, XDECL, DECL, PY, EXPR, STMT, WHILE, IF
 
 ##
@@ -87,19 +87,6 @@ sort = FUNC(BLOCK(ENV("t", array),
                         src="while ({cond}) {{\n{body}  }}\n")),
             src="void sort (Tab t) {{{body}}}")
 
-# let's play with Heap to layout the various data blocks
-# /!\ we must do this before simulating the code
-ha = Heap()
-ha.new(array)
-hs = Heap(heap={"grow": "right",
-                "distance": "0pt"})
-hs.new(first)
-hs.new(last)
-h = Heap(heap={"grow": "right",
-               "distance": "5mm"})
-h.new(ha)
-h.new(hs)
-
 # run code and save its animation
 sort.IP += 1
 sort()
@@ -107,5 +94,7 @@ with open("out.code", "w") as out :
     out.write(sort.tex())
 
 # save data animation
+b = Box(Box(array), Box(first, last, distance="0pt"))
 with open("out.tikz", "w") as out :
-    out.write(h.tex(tikzpicture={"scale": .55}))
+    out.write(b.tex(tikzpicture={"scale": .55},
+                    tail=r"\node at (-2,1) {};"))

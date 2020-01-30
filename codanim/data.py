@@ -28,6 +28,7 @@ class TikZ (object) :
                  "arrayscope": {},
                  "structscope": {},
                  "heapscope": {},
+                 "boxscope": {},
                  "valueread" : {"very thick": None,
                                 "draw": "blue!50!black",
                                 "fill": "blue!20"},
@@ -44,6 +45,7 @@ class TikZ (object) :
                  "heap": {"grow": "left",
                           "distance": "15mm"},
                  "group": {"opacity": 0,
+                           "draw": "yellow",
                            "very thick": None,
                            "inner sep": "0pt",
                            "outer sep": "0pt"},
@@ -93,8 +95,8 @@ class CAniTikZ (CAni) :
           {head}{code}{tail}
         \end{{tikzpicture}}
         """).format(opt=opt,
-                    head=(head + "\n") if head else "",
-                    tail=("\n" + tail) if tail else "",
+                    head=(head.strip("\n") + "\n") if head else "",
+                    tail=("\n" + tail.strip("\n")) if tail else "",
                     code="\n  ".join(self.tikz(**tikz).splitlines()))
 
 class Pointer (CAniTikZ) :
@@ -379,8 +381,7 @@ class Struct (Aggregate) :
             self.__dict__[name] = value
 
 class Heap (CAniTikZ) :
-    _defaults = {"group": {"opacity": 0,
-                           "inner sep": "5mm"}}
+    _defaults = {"group": {"inner sep": "5mm"}}
     def __init__ (self, **tikz) :
         super().__init__(tikz)
         self._alloc = {}
@@ -414,6 +415,54 @@ class Heap (CAniTikZ) :
             yield r"  }"
             opt = opt + {"pos": {opt.heap["grow"]:
                                  "{dist} of {prev}".format(dist=opt.heap["distance"],
+                                                           prev=(data@None).nodeid)}}
+        children = " ".join(f"({nid})" for nid in fit)
+        yield fr"  \node[{opt.group},fit={children}] ({self.nodeid}) {{}};"
+        yield r"\end{scope}"
+
+_flip = {"right": "below",
+         "below": "right",
+         "left": "above",
+         "above": "left"}
+
+class Box (CAniTikZ) :
+    def __init__ (self, *content, grow="right", distance="15mm", parent=None, **tikz) :
+        super().__init__(tikz)
+        self._grow = grow
+        self._dist = distance
+        self._parent = parent
+        self._data = tuple(self._init(content))
+    def _init (self, content) :
+        for obj in content :
+            if isinstance(obj, CAniTikZ) :
+                yield obj
+            elif isinstance(obj, list) :
+                yield self.__class__(*obj,
+                                     grow=(_flip.get(self._grow) if self._parent is None
+                                           else self._parent._grow),
+                                     distance=self._dist,
+                                     parent=self,
+                                     **self._o.dict())
+            else :
+                raise ValueError("invalid %s content: %r"
+                                 % (self.__class__.__name__, obj))
+    def tikz (self, **tikz) :
+        opt = TikZ(tikz) + self._o
+        classname = self.__class__.__name__
+        nodeid = self.nodeid
+        return (f"%% {classname} {nodeid} ({self._grow})\n"
+                + "\n".join(self._tikz(opt))
+                + f"\n%% /{classname} {nodeid}")
+    def _tikz (self, opt) :
+        fit = []
+        yield fr"\begin{{scope}}[{opt.boxscope}]"
+        for data in self._data :
+            fit.append(data.nodeid)
+            yield fr"  %% box {self.nodeid} content"
+            for line in data.tikz(**opt.dict()).splitlines() :
+                yield "    " + line
+            opt = opt + {"pos": {self._grow:
+                                 "{dist} of {prev}".format(dist=self._dist,
                                                            prev=(data@None).nodeid)}}
         children = " ".join(f"({nid})" for nid in fit)
         yield fr"  \node[{opt.group},fit={children}] ({self.nodeid}) {{}};"

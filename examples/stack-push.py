@@ -1,4 +1,4 @@
-from codanim.data import Heap, Struct, Value
+from codanim.data import Heap, Struct, Value, Box
 from codanim.flow import FUNC, BLOCK, ENV, WS, DECL, EXPR, STMT
 
 heap = Heap()
@@ -7,15 +7,6 @@ stack = heap.new(Struct({"val": Value(1), "next": None}))
 stack = heap.new(Struct({"val": Value(2), "next": stack}))
 s = Value(stack, nodeid="s")
 t = Value(None, nodeid="t", value={"xshift": "-25mm"})
-
-v = Heap(heap={"grow": "above",
-               "separation": "0pt"})
-h = Heap(heap={"grow": "right"},
-         )
-h.new(t)
-h.new(s)
-v.new(heap)
-v.new(h)
 
 push = FUNC(BLOCK(ENV("s", s),
                   ENV("u", Value(3)),
@@ -43,8 +34,9 @@ with open("out.code", "w") as out :
     out.write(push.tex())
 
 # save data and animation
+b = Box(heap, Box(t, s, grow="right"), grow="above")
 with open("out.tikz", "w") as out :
-    out.write(v.tex(tail=r"""
+    out.write(b.tex(tail=r"""
     \node[above] at (s.north) {\texttt{s}};
     \node[above] at (t.north) {\texttt{top}};
     """))
