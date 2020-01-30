@@ -7,7 +7,6 @@
 *.fls
 *.nav
 *.vrb
-*.out
 *.snm
 *.synctex.gz
 *.toc

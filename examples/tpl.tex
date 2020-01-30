@@ -12,6 +12,9 @@
 \usetikzlibrary{arrows.meta}
 \usetikzlibrary{positioning}
 
+\setbeamersize{text margin left=5mm,text margin right=5mm}
+\setlength{\headsep}{-5mm}
+
 \def\hl #1{{\setbox0=\hbox{#1}%
     \adjustbox{set vsize={\ht0}{\dp0}}{\hbox to \wd0{\hss\colorbox{yellow}{#1}\hss}}}}
 
@@ -26,9 +29,14 @@
 
 \begin{document}
 
-\begin{frame}[fragile]
-  \IfFileExists{out.code}{\VerbatimInput[commandchars=\\\{\}]{out.code}}{}
-  \IfFileExists{out.tikz}{\input{out.tikz}}{}
+\begin{frame}[t,fragile]
+  \vbox to 0pt{%
+    \IfFileExists{out.code}{\VerbatimInput[commandchars=\\\{\}]{out.code}}{}
+    \vss
+  }
+  \vbox to \textheight{%
+    \vss\IfFileExists{out.tikz}{\input{out.tikz}}{}%
+  }
 \end{frame}
 
 \end{document}

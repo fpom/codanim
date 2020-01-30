@@ -216,7 +216,7 @@ class Aggregate (CAniTikZ) :
     def __setitem__ (self, key, val) :
         self._d[key].set(val)
     def __len__ (self) :
-        return len(self.d)
+        return len(self._d)
     def stop (self) :
         for v in self._d.values() :
             v.stop()

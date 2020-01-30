@@ -170,9 +170,10 @@ class FunctionReturn (Exception) :
         self.RET = RET
 
 class RETURN (_CODE) :
-    _fields = ["value"]
+    _options = ["value"]
     def __call__ (self) :
-        self.value()
+        if self.value is not None :
+            self.value()
         self._at.add(self.IP)
         self.IP += 1
         raise FunctionReturn(self.RET)

@@ -1,12 +1,12 @@
-all: heap.pdf qs-partition.pdf
+all: heap.pdf qs-partition.pdf qs-main.pdf
 
 %.pdf: %.py tpl.tex
 	ln -sf ../codanim .
 	rm -f out.*
 	python $<
-	latexmk -pdf tpl
+	pdflatex tpl
+	pdflatex tpl
 	cp tpl.pdf $@
-	latexmk -C tpl
 
 clean:
-	rm -f $$(grep '^*' ../.gitignore)
+	rm -f out.* $$(grep '^*' ../.gitignore)
