@@ -87,16 +87,19 @@ class CAniTikZ (CAni) :
                              % (key, self.__class__.__name__))
     def ptr (self) :
         return Pointer(self)
-    def tex (self, **tikz) :
+    def tex (self, head=None, tail=None, **tikz) :
         opt = TikZ(tikz)
         return cleandoc(r"""\begin{{tikzpicture}}[{opt.tikzpicture}]
-          {code}
+          {head}{code}{tail}
         \end{{tikzpicture}}
-        """).format(opt=opt, code="\n  ".join(self.tikz(**tikz).splitlines()))
+        """).format(opt=opt,
+                    head=(head + "\n") if head else "",
+                    tail=("\n" + tail) if tail else "",
+                    code="\n  ".join(self.tikz(**tikz).splitlines()))
 
 class Pointer (CAniTikZ) :
     def __init__ (self, data) :
-        self._d = data
+        self.__dict__.update(_d=data, nodeid=None)
     def val (self) :
         return self._d
     def __tikz__ (self, src, opt) :
@@ -109,6 +112,10 @@ class Pointer (CAniTikZ) :
         return self._d[key]
     def __setitem__ (self, key, val) :
         self._d[key] = val
+    def __getattr__ (self, key) :
+        return getattr(self._d, key)
+    def __setattr__ (self, key, val) :
+        setattr(self._d, key, val)
 
 class Value (CAniTikZ) :
     def __init__ (self, init=None, **tikz) :
