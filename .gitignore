@@ -11,6 +11,8 @@
 *.synctex.gz
 *.toc
 *.tikz
+*.out
+*.code
 __pycache__
 examples/codanim
 examples/out.*

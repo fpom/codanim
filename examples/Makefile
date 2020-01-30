@@ -1,14 +1,13 @@
-all: heap.pdf qs-partition.pdf qs-main.pdf stack-push.pdf
+all: heap.pdf qs-partition.pdf qs-main.pdf stack-push.pdf clean
 gif: qs-partition.gif qs-main.gif stack-push.gif
 mp4: qs-partition.mp4 qs-main.mp4 stack-push.mp4
 
 %.pdf: %.py tpl.tex
-	ln -sf ../codanim .
 	rm -f out.*
-	python3 $<
+	PYTHONPATH=..:$$PYTHONPATH python3 $<
 	pdflatex tpl
 	pdflatex tpl
-	cp tpl.pdf $@
+	mv -f tpl.pdf $@
 
 %.gif: %.pdf
 	rm -rf _gif
