@@ -1,11 +1,12 @@
 from inspect import Signature, Parameter
 
-from . import CAni
+from . import CAni, autorepr
 from .highlight import pygmentize
 
 class _CODE (CAni) :
     _fields = []
     _options = []
+    @autorepr
     def __init__ (self, *l, **k) :
         params = []
         for i, name in enumerate(self._fields) :
@@ -19,7 +20,7 @@ class _CODE (CAni) :
             params.append(Parameter(name, Parameter.POSITIONAL_OR_KEYWORD, default=None))
         params.append(Parameter("src", Parameter.KEYWORD_ONLY, default=None))
         sig = Signature(params)
-        args = sig.bind(*l, **k)
+        args = self._args = sig.bind(*l, **k)
         args.apply_defaults()
         for key, val in args.arguments.items() :
             setattr(self, key, val)
@@ -84,6 +85,7 @@ class STMT (_CODE) :
 
 class EXPR (_CODE) :
     _fields = ["expr"]
+    @autorepr
     def __init__ (self, *l, **k) :
         super().__init__(*l, **k)
         if self.src is None :
@@ -113,12 +115,21 @@ class ENV (_CODE) :
 
 class WS (_CODE) :
     _fields = []
+    @autorepr
     def __init__ (self, src) :
         super().__init__(src=src)
     def __call__ (self) :
         pass
     def tex (self) :
         return self.src
+
+class RAW (_CODE) :
+    _fields = []
+    @autorepr
+    def __init__ (self, src) :
+        super().__init__(src=src)
+    def __call__ (self) :
+        pass
 
 class XDECL (_CODE) :
     _fields = ["*names"]
@@ -155,8 +166,7 @@ class DECL (_CODE) :
                                    value=tail.format(value=value))
 
 class BreakLoop (Exception) :
-    def __init__ (self) :
-        super().__init__()
+    pass
 
 class BREAK (_CODE) :
     def __call__ (self) :
@@ -233,4 +243,3 @@ class FUNC (_CODE) :
             self.body()
         except FunctionReturn as exc :
             self._env["RET"] = exc.RET
-

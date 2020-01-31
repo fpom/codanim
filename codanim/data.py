@@ -1,7 +1,7 @@
 from itertools import chain
 from inspect import cleandoc
 from collections import defaultdict
-from . import CAni, ExecEnv
+from . import CAni, ExecEnv, autorepr
 
 class dopt (dict) :
     def __str__ (self) :
@@ -100,6 +100,7 @@ class CAniTikZ (CAni) :
                     code="\n  ".join(self.tikz(**tikz).splitlines()))
 
 class Pointer (CAniTikZ) :
+    @autorepr
     def __init__ (self, data) :
         self.__dict__.update(_d=data, nodeid=None)
     def val (self) :
@@ -120,6 +121,7 @@ class Pointer (CAniTikZ) :
         setattr(self._d, key, val)
 
 class Value (CAniTikZ) :
+    @autorepr
     def __init__ (self, init=None, **tikz) :
         super().__init__(tikz)
         self._h = [[init, self.IP, None]]
@@ -190,6 +192,7 @@ class Value (CAniTikZ) :
 ExecEnv._ValueClass = Value
 
 class Aggregate (CAniTikZ) :
+    @autorepr
     def __init__ (self, init, **tikz) :
         super().__init__(tikz)
         if isinstance(init, int) :
@@ -315,6 +318,7 @@ class Aggregate (CAniTikZ) :
 
 class Array (Aggregate) :
     _defaults = {"aggregate": {"index": "north"}}
+    @autorepr
     def __init__ (self, init, index=[], **tikz) :
         super().__init__(init, **tikz)
         self._o.aggregatescope = self._o.arrayscope
@@ -366,6 +370,7 @@ class Array (Aggregate) :
 class Struct (Aggregate) :
     _defaults = {"aggregate": {"grow": "south",
                                "ticks": "west"}}
+    @autorepr
     def __init__ (self, init, **tikz) :
         self.__dict__.update(_d={}, _o=None, _first=None, _last=None, nodeid=None)
         super().__init__(init, **tikz)
@@ -382,6 +387,7 @@ class Struct (Aggregate) :
 
 class Heap (CAniTikZ) :
     _defaults = {"group": {"inner sep": "5mm"}}
+    @autorepr
     def __init__ (self, **tikz) :
         super().__init__(tikz)
         self._alloc = {}
@@ -426,6 +432,7 @@ _flip = {"right": "below",
          "above": "left"}
 
 class Box (CAniTikZ) :
+    @autorepr
     def __init__ (self, *content, grow="right", distance="15mm", parent=None, **tikz) :
         super().__init__(tikz)
         self._grow = grow
