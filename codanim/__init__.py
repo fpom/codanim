@@ -47,6 +47,12 @@ class CAni (object) :
     @RET.setter
     def RET (self, val) :
         dict.__setitem__(self._env, "RET", val)
+    @property
+    def CASE (self) :
+        return self._env.get("CASE", None)
+    @CASE.setter
+    def CASE (self, val) :
+        dict.__setitem__(self._env, "CASE", val)
     def exec (self, code) :
         self._env.exec(code)
     def eval (self, code) :

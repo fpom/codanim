@@ -46,6 +46,9 @@ class _CODE (CAni) :
         for key, val in self.items() :
             if isinstance(val, _CODE) :
                 sub[key] = val.source()
+            elif isinstance(val, (list, tuple)) :
+                sub[key] = "".join(v.source() if isinstance(v, _CODE) else str(v)
+                                   for v in val)
             else :
                 sub[key] = val
         return self.src.format(**sub)
@@ -64,8 +67,29 @@ class _CODE (CAni) :
         else :
             return tex
 
+class RAW (_CODE) :
+    _fields = []
+    @autorepr
+    def __init__ (self, src) :
+        super().__init__(src=src)
+    def __call__ (self) :
+        pass
+
+class WS (RAW) :
+    _fields = []
+    def tex (self) :
+        return self.src
+
 class BLOCK (_CODE) :
     _fields = ["*body"]
+    def __init__ (self, *l, **k) :
+        super().__init__(*l, **k)
+        self.body = list(self.body)
+    def __repr__ (self) :
+        return "{}({}{}{})".format(self.__class__.__name__,
+                                   ", ".join(repr(b) for b in self.body),
+                                   ", " if self.body and self.src else "",
+                                   "src={}".format(self.src) if self.src else "")
     def __call__ (self) :
         self._at.add(self.IP)
         for code in self.body :
@@ -74,6 +98,15 @@ class BLOCK (_CODE) :
         return "".join(b.source() for b in self.body)
     def tex (self) :
         return "".join(b.tex() for b in self.body)
+    def append (self, code) :
+        if not self.body :
+            self.body.append(code)
+        elif isinstance(self.body[-1], RAW) and isinstance(code, RAW) :
+            self.body[-1] = RAW(self.body[-1].src + code.src)
+        elif isinstance(code, RAW) and not code.src :
+            pass
+        else :
+            self.body.append(code)
 
 class STMT (_CODE) :
     _fields = ["*steps"]
@@ -113,24 +146,6 @@ class ENV (_CODE) :
     def source (self) :
         return ""
 
-class WS (_CODE) :
-    _fields = []
-    @autorepr
-    def __init__ (self, src) :
-        super().__init__(src=src)
-    def __call__ (self) :
-        pass
-    def tex (self) :
-        return self.src
-
-class RAW (_CODE) :
-    _fields = []
-    @autorepr
-    def __init__ (self, src) :
-        super().__init__(src=src)
-    def __call__ (self) :
-        pass
-
 class XDECL (_CODE) :
     _fields = ["*names"]
     def __call__ (self) :
@@ -169,6 +184,9 @@ class BreakLoop (Exception) :
     pass
 
 class BREAK (_CODE) :
+    def __init__ (self) :
+        super().__init__()
+        self.src = "break"
     def __call__ (self) :
         self._at.add(self.IP)
         self.IP += 1
@@ -243,3 +261,26 @@ class FUNC (_CODE) :
             self.body()
         except FunctionReturn as exc :
             self._env["RET"] = exc.RET
+
+class SWITCH (_CODE) :
+    _fields = ["cond", "*cases"]
+    def __call__ (self) :
+        self.cond()
+        cond = self.RET
+        try :
+            for case in self.cases :
+                self.CASE = cond
+                case()
+        except BreakLoop :
+            pass
+
+class CASE (_CODE) :
+    _fields = ["value", "body"]
+    def __call__ (self) :
+        self.value()
+        if self.RET == self.CASE :
+            self.body()
+
+class DEFAULT (BLOCK) :
+    def source (self) :
+        return self.src.format(body=super().source())
