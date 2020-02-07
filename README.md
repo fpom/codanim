@@ -128,6 +128,8 @@ code and data structures are rendered for LaTeX/beamer inclusion.
 Note the use of class `Box` that can be used to layout several data
 structures.
 
+![stack push animation](examples/stack-push.gif "stack push")
+
 ### `examples/qs-partition.py` and `examples/qs-main.py`
 
 The partitioning and main algorithm of a quick-sort. This shows how to
