@@ -136,3 +136,6 @@ The partitioning and main algorithm of a quick-sort. This shows how to
 use `Array`, in particular the `index` argument. `qs-main` also shows
 how to define custom layout of arrays, as well as auxiliary Python
 functions to simulate full C-functions calls in one step.
+
+![quick-sort partitioning](examples/qs-partition.gif "partition")
+![quick-sort main](examples/qs-main.gif "quick-sort")
