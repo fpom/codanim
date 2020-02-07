@@ -1,7 +1,7 @@
-codanim: Animated code & data structures with LaTeX/beamer 
+# codanim: Animated code & data structures with LaTeX/beamer 
 
-  (C) 2020 Franck Pommereau <franck.pommereau@univ-evry.fr>
-      This is free software, see file LICENCE
+    (C) 2020 Franck Pommereau <franck.pommereau@univ-evry.fr>
+        This is free software, see file LICENCE
 
 codanim allows to generate LaTeX/TikZ code to animate source code and
 data structures for beamer presentations. So far, it is oriented to
