@@ -385,3 +385,13 @@ class Translator (object) :
         return default
     def do_Break (self, node) :
         return flow.BREAK()
+
+##
+## CLI interface
+##
+
+def translate (code) :
+    "the C language"
+    a = parse(code)
+    t = Translator()
+    return t(a)
